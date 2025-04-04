@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Touchscreen Photo Booth</title>
+    <link rel="stylesheet" href="/styles.css">
+    <!-- <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+
+</head>
+<body>
+    <!-- Record Screen -->
+    <div id="recordScreen" class="screen">
+        <div class="camera-container">
+            <video id="videoPreview" autoplay playsinline></video>
+            <div id="countdown" class="countdown"></div>
+        </div>
+        <div class="preview-grid">
+            <div class="preview-box"><img id="preview1" class="preview-img"></div>
+            <div class="preview-box"><img id="preview2" class="preview-img"></div>
+            <div class="preview-box"><img id="preview3" class="preview-img"></div>
+        </div>
+    </div>
+
+    <!-- Merged Image Display -->
+    <div id="mergedImageSection" class="screen hidden">
+        <canvas id="mergedCanvas"></canvas>
+    </div>
+
+    <!-- QR Code Display -->
+    <div id="qrSection" class="screen hidden">
+        <div id="qrcode"></div>
+        <p class="instruction">Scan to download your photo</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

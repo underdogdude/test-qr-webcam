@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Photo Booth</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- <script src="https://unpkg.com/qrcodejs@1.4.4/qrcode.min.js"></script> -->
+    <style>
+        /* CSS Reset */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        /* Webcam Preview */
+        #videoPreview {
+            width: 100%;
+            max-width: 600px;
+            transform: scaleX(-1);
+        }
+
+        /* Photo Previews */
+        .preview-grid {
+            display: flex;
+            gap: 10px;
+            margin: 20px;
+        }
+
+        /* Countdown Animation */
+        .countdown {
+            font-size: 10rem;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <video id="videoPreview" autoplay playsinline></video>
+    <div class="preview-grid">
+        <canvas class="preview-box"></canvas>
+        <canvas class="preview-box"></canvas>
+        <canvas class="preview-box"></canvas>
+    </div>
+    <div id="countdown" class="countdown"></div>
+    <div id="qrContainer"></div>
+
+    <script>
+        // 1. Webcam Setup
+        const video = document.getElementById('videoPreview');
+        const countdown = document.getElementById('countdown');
+        const previews = document.querySelectorAll('.preview-box');
+        const qrContainer = document.getElementById('qrContainer');
+        
+        let currentPhoto = 0;
+        let isCounting = false;
+
+        // 2. Camera Initialization
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                video.srcObject = stream;
+            } catch (error) {
+                alert('Camera error: ' + error.message);
+            }
+        }
+
+        // 3. Capture Process
+        function startCapture() {
+            if (currentPhoto >= 3 || isCounting) return;
+            
+            isCounting = true;
+            let count = 5;
+            
+            countdown.style.display = 'block';
+            countdown.textContent = count;
+
+            const timer = setInterval(() => {
+                count--;
+                countdown.textContent = count;
+                
+                if (count <= 0) {
+                    clearInterval(timer);
+                    countdown.style.display = 'none';
+                    capturePhoto();
+                }
+            }, 1000);
+        }
+
+        // 4. Photo Capture
+        function capturePhoto() {
+            const canvas = previews[currentPhoto];
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0);
+            
+            currentPhoto++;
+            isCounting = false;
+
+            if (currentPhoto === 3) generateFinalOutput();
+        }
+
+        // 5. Final Output
+        function generateFinalOutput() {
+            // Create merged image
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = previews[0].width * 3;
+            finalCanvas.height = previews[0].height;
+            
+            const ctx = finalCanvas.getContext('2d');
+            previews.forEach((canvas, i) => {
+                ctx.drawImage(canvas, canvas.width * i, 0);
+            });
+
+            // Generate QR Code
+            const imageData = finalCanvas.toDataURL('image/jpeg');
+            qrContainer.innerHTML = '';
+            
+            new QRCode(qrContainer, {
+                text: imageData,
+                width: 300,
+                height: 300,
+                colorDark: '#000',
+                colorLight: '#fff',
+                correctLevel: QRCode.CorrectLevel.L
+            });
+
+            // Add direct download link
+            const link = document.createElement('a');
+            link.download = 'photo-booth.jpg';
+            link.href = imageData;
+            link.textContent = 'Click to Download';
+            qrContainer.appendChild(link);
+        }
+
+        // Event Listeners
+        document.body.addEventListener('click', startCapture);
+        window.addEventListener('load', initCamera);
+    </script>
+</body>
+</html>
